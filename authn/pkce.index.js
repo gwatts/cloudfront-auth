@@ -6,6 +6,7 @@ const auth = require('./auth.js');
 const nonce = require('./nonce.js');
 const codeChallenge = require('./code-challenge.js');
 const cfg = require('./config.js');
+const utils = require('./utils.js');
 const axios = require('axios');
 var discoveryDocument;
 var jwks;
@@ -243,6 +244,7 @@ function mainProcess(event, context, callback) {
         }
       } else {
         console.log("Authorizing user.");
+        utils.runUtils(event, context, callback, config);
         auth.isAuthorized(decoded, request, callback, unauthorized, internalServerError, config);
       }
     });
