@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const cookie = require('cookie');
 const jwkToPem = require('jwk-to-pem');
 const auth = require('./auth.js');
+const utils = require('./utils.js');
 const axios = require('axios');
 var config;
 
@@ -121,6 +122,7 @@ function mainProcess(event, context, callback) {
         }
       } else {
         console.log("Authorizing user.");
+        utils.runUtils(event, context, callback, config);
         auth.isAuthorized(decoded, request, callback, unauthorized, internalServerError, config);
       }
     });

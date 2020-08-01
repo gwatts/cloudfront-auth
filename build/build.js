@@ -6,7 +6,7 @@ const colors = require('colors/safe');
 const url = require('url');
 const R = require('ramda');
 
-var config = { AUTH_REQUEST: {}, TOKEN_REQUEST: {} };
+var config = { AUTH_REQUEST: {}, TOKEN_REQUEST: {}, UTILS: {} };
 var oldConfig;
 
 config.DISTRIBUTION = process.argv[2]
@@ -45,10 +45,14 @@ function customConfiguration() {
       },
       method: {
         description: colors.red("Authentication methods:\n    (1) Google\n    (2) Microsoft\n    (3) GitHub\n    (4) OKTA\n    (5) Auth0\n    (6) Centrify\n    (7) OKTA Native\n\n    Select an authentication method")
+      },
+      dirRewrite: {
+          description: colors.red("Directory filename:\n    Map directory paths (ending in \"/\") to filename entered here (eg. \"index.html\").  Leave blank to pass through requests unmodified")
       }
     }
   }, function (err, result) {
     config.DISTRIBUTION = result.distribution;
+    config.UTILS.dirIndexFilename = result.dirRewrite;
     shell.mkdir('-p', 'distributions/' + config.DISTRIBUTION);
     if (fs.existsSync('distributions/' + config.DISTRIBUTION + '/config.json')) {
       oldConfig = JSON.parse(fs.readFileSync('./distributions/' + config.DISTRIBUTION + '/config.json', 'utf8'));
@@ -329,11 +333,13 @@ function genericGoogleConfiguration() {
   config.TOKEN_REQUEST.redirect_uri = 'https://${domain-name}${callback-path}';
   config.TOKEN_REQUEST.grant_type = 'authorization_code';
 
+  config.UTILS.dirIndexFilename = "${dir-index-filename}";
+
   buildGoogle(true)
 }
 
 function buildGoogle(isGeneric) {
-    var files = ["config.json", "config.js", "index.js", "auth.js", "nonce.js"];
+    var files = ["config.json", "config.js", "index.js", "auth.js", "nonce.js", "utils.js"];
 
     switch (config.AUTHZ) {
       case 'hosted-domain':
@@ -376,6 +382,7 @@ function buildGoogle(isGeneric) {
     }
   shell.cp('./authn/openid.index.js', './distributions/' + config.DISTRIBUTION + '/index.js');
   shell.cp('./nonce.js', './distributions/' + config.DISTRIBUTION + '/nonce.js');
+  shell.cp('./utils.js', './distributions/' + config.DISTRIBUTION + '/utils.js');
   shell.cp(isGeneric ? './config/generic.config.js' : './config/custom.config.js', './distributions/' + config.DISTRIBUTION + '/config.js');
   writeConfig(config, zip, files);
 }
@@ -474,6 +481,7 @@ function genericOktaConfiguration() {
   } else if (config.AUTHN == 'OKTA_NATIVE') {
     config.PKCE_CODE_VERIFIER_LENGTH = '${pkce-code-verifier-length}';
   }
+  config.UTILS.dirIndexFilename = "${dir-index-filename}";
 
   buildOkta(true);
 }
